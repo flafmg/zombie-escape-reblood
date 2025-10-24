@@ -21,6 +21,7 @@ for _, filename in ipairs{
 	"2-Core/healthsystem/rhealth.lua",
 	"2-Core/healthsystem/rhealth_dmg.lua",
 	"2-Core/healthsystem/rhealth_extra.lua",
+	"2-core/maingame/char_selector",
 	"2-Core/maingame/on_spawn.lua",
 	"2-Core/maingame/name_tags.lua",
 	"2-Core/maingame/radar.lua",

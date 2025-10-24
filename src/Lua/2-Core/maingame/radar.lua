@@ -1,9 +1,5 @@
-local test = 0
-
-//Colors
+//col
 local c_white = 0
-local c_silver = 6
-local c_black = 31
 local c_blue = 149
 local c_darkblue = 154
 local c_red = 34
@@ -11,188 +7,208 @@ local c_darkred = 40
 local c_yellow = 72
 local c_orange = 56
 local c_green = 102
-local c_purple = 180
-local c_darkpurple = 184
-local c_border = 27 //Color for radar borders
-local color = c_white //Currently selected color
-local bo = 2 //border offset
+local c_black = 31
+
+//config radar
+local RADAR_SIZE = 64
+local RADAR_BORDER = 2
+local RADAR_ICON_SIZE = 3
+local RADAR_ICON_SIZE_SPLITSCREEN = 2
+local RADAR_DOT_SIZE = 2
+local RADAR_CLAMP_MARGIN = 5
+local RADAR_COMPASS_DISTANCE = 4
+local RADAR_TEXT_OFFSET = 2
+local RADAR_POSITION_OFFSET = 8
+local RADAR_HEIGHT_SHRINK_SIZE = 2
+
+local radarpatch = nil
+
+local function drawCompassMarkers(v, cx, cy, radius, playerangle, scale)
+	local compassdist = radius - RADAR_COMPASS_DISTANCE*scale
+	local textoffset = RADAR_TEXT_OFFSET*scale
+	local markers = {
+		{ang = 0, text = "N"},
+		{ang = ANGLE_180, text = "S"},
+		{ang = ANGLE_90, text = "E"},
+		{ang = -ANGLE_90, text = "W"}
+	}
+	
+	for i = 1, #markers do
+		local m = markers[i]
+		local angle = playerangle + m.ang
+		local mx = FixedMul(cos(angle), compassdist*FRACUNIT)/FRACUNIT
+		local my = FixedMul(sin(angle), compassdist*FRACUNIT)/FRACUNIT
+		v.drawString(cx+mx-textoffset, cy+my-textoffset, m.text, 
+			V_NOSCALESTART|V_ALLOWLOWERCASE|V_6WIDTHSPACE, "small")
+	end
+end
+local function clampToCircle(x, y, maxDist)
+	local dist = FixedHypot(x*FRACUNIT, y*FRACUNIT)/FRACUNIT
+	if dist > maxDist then
+		local angle = R_PointToAngle2(0, 0, x*FRACUNIT, y*FRACUNIT)
+		x = FixedMul(cos(angle), maxDist*FRACUNIT)/FRACUNIT
+		y = FixedMul(sin(angle), maxDist*FRACUNIT)/FRACUNIT
+		return x, y, true
+	end
+	return x, y, false
+end
+
+
+
+local function drawPlayerIcon(v, xpos, ypos, centerx, centery, player, size)
+	if not player or not player.skin then return end
+	
+	local icon = v.getSprite2Patch(player.skin, SPR2_LIFE)
+	local scale = size*FRACUNIT/(icon.width)
+	local colormap = v.getColormap(TC_DEFAULT, player.skincolor)
+	local iconx = FixedInt((xpos+centerx)*FRACUNIT - (icon.width*scale)/2)
+	local icony = FixedInt((ypos+centery)*FRACUNIT - (icon.height*scale)/2)
+	v.drawScaled(iconx*FRACUNIT, icony*FRACUNIT, scale, icon, V_NOSCALESTART, colormap)
+end
+
 
 local function hudstuff(v, user, cam)
-	if not(multiplayer)
-	    --or user.ctfteam == 2
-		or maptol&TOL_NIGHTS
+	if not multiplayer or maptol&TOL_NIGHTS 
 		or (gametype == GT_HIDEANDSEEK and user.pflags&PF_TAGIT)
-		then return
+		or gametype ~= GT_ZESCAPE then 
+		return 
 	end
-	if (gametype ~= GT_ZESCAPE) return end //easy way though this is gonna make me copy this again for the radar in sp but i don't really care
+	
 	local umo = user.mo
-	if umo == nil 
-		then return
-	end	
--- 	local test = user.rings
-	//Setup radar
+	if not umo then return end
+	if not radarpatch then
+		radarpatch = v.cachePatch("RADAR")
+	end
+	
 	local xscale = v.dupx()
-	local yscale = v.dupx()
--- 	local unit = user.mo.scale
+	local yscale = v.dupy()
 	local unit = FRACUNIT
 	local radius = 152*48
-	local fullsight = 260*64 -- 152*64 old
-	local radarsize = 64*xscale
-	if gametype <= GT_COOP then
--- 		radius = 128*16
--- 		fullsight = 128*32
-		radarsize = $*2/3
--- 		if splitscreen then return nil end
-	end
+	local fullsight = 260*64
+	local radarsize = RADAR_SIZE
 	local hradius = radius
-	if splitscreen then radarsize = $*2/3 end
-	local center = radarsize/2
 	
-	//Alignment
--- 	local xpos = 8 //Left corner
--- 	local xpos = v.width()/v.dupx()-radarsize-16 //Right corner
-	local xpos = v.width()-radarsize-8*xscale //Right corner
-	local ypos = 8*yscale //Top corner
--- 	local ypos = 8 //Top corner
--- 	local ypos = v.height()/yscale-radarsize-32 //Bottom corner
-
-
-	if splitscreen then //2-Player offsets
-		ypos = $/2
+	if splitscreen then 
+		radarsize = radarsize*2/3 
+	end
+	
+	local center = radarsize/2
+	local xpos = v.width()-radarsize*xscale-RADAR_POSITION_OFFSET*xscale
+	local ypos = RADAR_POSITION_OFFSET*yscale
+	if splitscreen then
+		ypos = ypos/2
 		if user == secondarydisplayplayer then
-			ypos = $+v.height()/2
+			ypos = ypos + v.height()/2
 		end
 	end
-	local xpos2 = xpos+radarsize-xscale
-	local ypos2 = ypos+radarsize-yscale
-	//Draw radar box
--- 	v.drawFill(xpos,ypos,radarsize,radarsize,c_black)
-	v.drawFill(xpos,ypos,radarsize,radarsize,c_black|V_NOSCALESTART)
-	//Draw borders
-	v.drawFill(xpos+xscale,ypos+yscale,radarsize-xscale*2,yscale,c_border|V_NOSCALESTART) //Top border
-	v.drawFill(xpos+xscale,ypos2-yscale,radarsize-xscale*2,yscale,c_border|V_NOSCALESTART) //Bottom border
-	v.drawFill(xpos+xscale,ypos+yscale,xscale,radarsize-yscale*2,c_border|V_NOSCALESTART) //Left border
-	v.drawFill(xpos2-xscale,ypos+yscale,xscale,radarsize-yscale*2,c_border|V_NOSCALESTART) //Right border
 	
+	local cx = xpos + center*xscale
+	local cy = ypos + center*yscale
+	local r = center
+	
+	v.draw(xpos + center, ypos + center, radarpatch, V_NOSCALESTART)
+	drawCompassMarkers(v, cx, cy, r*xscale, umo.angle, xscale)
+
+	local maxDist = r*xscale - RADAR_CLAMP_MARGIN*xscale
+	local iconsize = xscale*RADAR_ICON_SIZE/2
+	if splitscreen then 
+		iconsize = iconsize*RADAR_ICON_SIZE_SPLITSCREEN/3 
+	end
+
+
 	if gametype > GT_RACE then
-	//Search mobj and draw coordinates
-		searchBlockmap("objects",function (umo,mo)
-			if mo == nil or not(mo.health) then return nil end 
-			local dist = R_PointToDist2(umo.x,umo.y,mo.x,mo.y)
-			local zdist = abs(mo.z-umo.z)
-			local flash1 = not(leveltime&15)
-			local flash2 = not(leveltime&4)
-			local size = xscale*2
-			if splitscreen then 
-				size = $*2/3
-			end
-			//Distance check
-			if dist > fullsight*unit then return nil
-			//Players
-			elseif mo.type == MT_PLAYER then
+		searchBlockmap("objects", function(umo, mo)
+			if not mo or not mo.health then return nil end
+			
+			local dist = R_PointToDist2(umo.x, umo.y, mo.x, mo.y)
+			local zdist = abs(mo.z - umo.z)
+			
+			if dist > fullsight*unit then return nil end
+			
+			local color = c_white
+			local size = iconsize
+			local drawicon = false
+			
+			if mo.type == MT_PLAYER then
 				if mo.player.spectator then return nil end
-				if gametype == GT_ZESCAPE
-					local it = mo.player.ctfteam == 1
+				
+				drawicon = true
+				
+				if gametype == GT_ZESCAPE then
 					local notmyteam = mo.player.ctfteam == 1
 					local notdrawing = (mo.flags2 & MF2_DONTDRAW)
-					if notmyteam and flash2 then
+					
+					if notdrawing then
+						color = c_black
+					elseif notmyteam and not(leveltime&4) then
 						color = c_yellow
-					elseif it then
+					elseif mo.player.ctfteam == 1 then
 						color = c_red
 					else
 						color = c_blue
 					end
-					
-					if notdrawing then -- mainly for revenger
-						color = c_black
-					end
 				end
-			//Badniks and bosses
-			/*
-			elseif mo.flags&MF_ENEMY
-				then color = c_darkred
-			elseif mo.flags&MF_BOSS
-				then
-				size = $*3/2
-				color = c_darkred
-			*/
-			//Item pickups
-	-- 		elseif (mo.flags&MF_MONITOR) and mo.health and not(mo.type == MT_RING_BOX) then color = c_green
-			elseif (mo.type >= MT_BOUNCEPICKUP and mo.type <= MT_GRENADEPICKUP) then
+			elseif mo.type >= MT_BOUNCEPICKUP and mo.type <= MT_GRENADEPICKUP then
 				color = c_green
--- 				size = $*2/3
-			elseif (mo.type == MT_TOKEN or (mo.type <= MT_EMERHUNT and mo.type >= MT_EMERALD1))
-				if not(flash1) then color = c_orange
-				else color = c_yellow
-				end
--- 				size = $*2/3
-			/*
-			//Starpost
-			elseif (mo.type == MT_STARPOST) then 
-				if not(flash1) then color = c_purple
-				else color = c_yellow
-				end
-			//Goalsign
-			elseif (mo.type == MT_SIGN) then 
-				if not(flash2) then color = c_purple
-				else color = c_yellow
-				end
-			*/
-			//CTF Flags
+			elseif mo.type == MT_TOKEN or (mo.type <= MT_EMERHUNT and mo.type >= MT_EMERALD1) then
+				color = not(leveltime&15) and c_orange or c_yellow
 			elseif mo.type == MT_REDFLAG then
-				if not(flash1) and not(mo.fuse and flash2) then
-					color = c_darkred
-				else 
-					color = c_yellow
-				end
--- 				size = $*2/3
+				color = (not(leveltime&15) and not(mo.fuse and not(leveltime&4))) and c_darkred or c_yellow
 			elseif mo.type == MT_BLUEFLAG then
-				if not(flash1) and not(mo.fuse and flash2) then
-					color = c_darkblue
-				else
-					color = c_yellow
-				end
--- 				size = $*2/3
-			else return nil
+				color = (not(leveltime&15) and not(mo.fuse and not(leveltime&4))) and c_darkblue or c_yellow
+			else
+				return nil
 			end
-	 		if zdist > hradius*unit then size = $*2/3 end
-			local angle = umo.angle-R_PointToAngle2(umo.x,umo.y,mo.x,mo.y)+ANGLE_270
-			local x = P_ReturnThrustX(nil,angle,dist)/unit*center/radius
-			local y = P_ReturnThrustY(nil,angle,dist)/unit*center/radius
-			local pushr = bo*xscale
-			local pushl = bo*xscale
-			if x <= -center+pushr or x >= center-pushl or y <= -center+pushr or y >= center-pushl then
-				size = $/2
-				x = max(pushr-center,min($,center-pushl))
-				y = max(pushr-center,min($,center-pushl))
+			
+			if zdist > hradius*unit then 
+				size = size*RADAR_HEIGHT_SHRINK_SIZE/3 
 			end
-			v.drawFill(xpos+x+center-size/2,ypos+y+center-size/2,size,size,color|V_NOSCALESTART)
-	-- 		print(color)
+
+			local angle = umo.angle - R_PointToAngle2(umo.x, umo.y, mo.x, mo.y) + ANGLE_270
+			local x = P_ReturnThrustX(nil, angle, dist)/unit*center/radius
+			local y = P_ReturnThrustY(nil, angle, dist)/unit*center/radius
+			
+			x = x*xscale
+			y = y*yscale
+			
+			local clamped
+			x, y, clamped = clampToCircle(x, y, maxDist)
+			if clamped then size = size/2 end
+			
+			if drawicon and mo.player and mo.player.skin then
+				drawPlayerIcon(v, xpos, ypos, x+center*xscale, y+center*yscale, mo.player, size)
+			else
+				v.drawFill(xpos+x+center*xscale-size/2, ypos+y+center*yscale-size/2, size, size, color|V_NOSCALESTART)
+			end
+			
 			return nil
-		end,umo,umo.x-fullsight*unit,umo.x+fullsight*unit,umo.y-fullsight*unit,umo.y+fullsight*unit)
+		end, umo, umo.x-fullsight*unit, umo.x+fullsight*unit, umo.y-fullsight*unit, umo.y+fullsight*unit)
 	else
-		for player in players.iterate
+		for player in players.iterate do
 			local mo = player.mo
-			if mo == nil or mo == umo or player.spectator or not(mo.health)
-				then continue
-			else color = c_blue
+			if not mo or mo == umo or player.spectator or not mo.health or (mo.flags2 & MF2_DONTDRAW) then //if not spectator or helth 0 or draw flag?
+				continue
 			end
-			local size = xscale*2
-			local dist = R_PointToDist2(umo.x,umo.y,mo.x,mo.y)
-			local angle = umo.angle-R_PointToAngle2(umo.x,umo.y,mo.x,mo.y)+ANGLE_270
-			local x = P_ReturnThrustX(nil,angle,dist)/unit*center/radius
-			local y = P_ReturnThrustY(nil,angle,dist)/unit*center/radius
-			local pushr = bo*xscale
-			local pushl = bo*xscale
-			if x <= -center+pushr or x >= center-pushl or y <= -center+pushr or y >= center-pushl then
-				size = $/2
-				x = max(pushr-center,min($,center-pushl))
-				y = max(pushr-center,min($,center-pushl))
-			end
-			v.drawFill(xpos+x+center-size/2,ypos+y+center-size/2,size,size,color|V_NOSCALESTART)
+			
+			local size = iconsize
+			local dist = R_PointToDist2(umo.x, umo.y, mo.x, mo.y)
+			local angle = umo.angle - R_PointToAngle2(umo.x, umo.y, mo.x, mo.y) + ANGLE_270
+			local x = P_ReturnThrustX(nil, angle, dist)/unit*center/radius
+			local y = P_ReturnThrustY(nil, angle, dist)/unit*center/radius
+			
+			x = x*xscale
+			y = y*yscale
+			
+			local clamped
+			x, y, clamped = clampToCircle(x, y, maxDist)
+			if clamped then size = size/2 end
+			
+			drawPlayerIcon(v, xpos, ypos, x+center*xscale, y+center*yscale, player, size)
 		end
 	end
-	//Draw self coordinates
-	v.drawFill(xpos+center-xscale/2,ypos+center-yscale/2,xscale,yscale,c_white|V_NOSCALESTART)
+	
+	local dotsize = xscale*RADAR_DOT_SIZE
+	v.drawFill(xpos+center*xscale-dotsize/2, ypos+center*yscale-dotsize/2, dotsize, dotsize, c_white|V_NOSCALESTART)
 end
-hud.add(hudstuff, player)
+
+hud.add(hudstuff, "game")
