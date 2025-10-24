@@ -106,7 +106,7 @@ local function hudstuff(v, user, cam)
 	local cy = ypos + center*yscale
 	local r = center
 	
-	v.draw(xpos + center, ypos + center, radarpatch, V_NOSCALESTART)
+	v.draw(xpos + center, ypos + center, radarpatch, V_NOSCALESTART|V_20TRANS)
 	drawCompassMarkers(v, cx, cy, r*xscale, umo.angle, xscale)
 
 	local maxDist = r*xscale - RADAR_CLAMP_MARGIN*xscale
