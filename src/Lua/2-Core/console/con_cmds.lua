@@ -299,3 +299,32 @@ COM_AddCommand("ze_removezombie", function(player, ztype)
 		end
 	end
 end)
+
+COM_AddCommand("ze_notify", function(player, targetPlayer, type, message)
+	if (gametype ~= GT_ZESCAPE) then
+		CONS_Printf(player, "The game mode must be Zombie Escape to use this command.")
+		return
+	end
+	local target = nil
+	for p in players.iterate do
+		if p.name == targetPlayer then
+			target = p
+			break
+		end
+	end
+	if not target then
+		CONS_Printf(player, "Player not found.")
+		return
+	end
+	ZE.player_notify(target, type, message)
+end, 1)
+
+COM_AddCommand("ze_notifyall", function(player, type, message)
+	if (gametype ~= GT_ZESCAPE) then
+		CONS_Printf(player, "The game mode must be Zombie Escape to use this command.")
+		return
+	end
+	for p in players.iterate do
+		ZE.player_notify(p, type, message)
+	end
+end, 1)

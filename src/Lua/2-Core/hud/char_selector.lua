@@ -73,6 +73,7 @@ function ZE.ConfirmCharSelection(player)
 		
 		selector.confirmed = true
 		//print("Selected skin: "..selectedSkin.realname.." for player "..#player)
+		ZE.schedulePresentation(player)
 	end
 end
 
@@ -241,7 +242,7 @@ end, "game")
 addHook("PlayerSpawn", function(player)
 	if not (gametype == GT_ZESCAPE) then return end
 	if not (player.mo and player.mo.valid) then return end
-	
+
 	if player.ctfteam == 2 and leveltime < CV.waittime then
 		local timeremaining = (CV.waittime - leveltime) / TICRATE
 		ZE.OpenCharSelector(player, timeremaining * TICRATE)

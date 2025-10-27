@@ -8,6 +8,8 @@ for _, filename in ipairs{
 	"2-Core/init/int_freeslot.lua",
 	"2-Core/init/int_global.lua",
 	"2-Core/init/int_ZE_RSNEO.lua",
+	"2-Core/hud/player_notification.lua",
+	"2-Core/maingame/presentation.lua",
 	
 	--cmds and etc
 	"2-Core/console/con_timer.lua",
@@ -99,6 +101,7 @@ for _, filename in ipairs{
 	"2-Core/hooks/hook_main.lua",
 	"2-Core/hooks/hook_hud.lua",
 	"2-Core/hud/player_stats_hud.lua",
+	"2-Core/hud/game_status_hud.lua",
 	"2-Core/hooks/hook_extrachars.lua",
 	"2-Core/hooks/hook_collidehooks.lua",
 } do
