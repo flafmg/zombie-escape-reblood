@@ -1,214 +1,144 @@
-//col
-local c_white = 0
-local c_blue = 149
-local c_darkblue = 154
-local c_red = 34
-local c_darkred = 40
-local c_yellow = 72
-local c_orange = 56
-local c_green = 102
-local c_black = 31
+local RADAR_CONFIG = {
+    RADAR_OFFSETX = 5,
+    RADAR_OFFSETY = 5,
+    RADAR_SIZE = 131,
+    RADAR_SCALE = (3* FRACUNIT) / 5,
+    RADAR_SIGHT = (260 * 64) * FRACUNIT,
+    ICON_SIZE = 3,
+    ICON_OUT_SIZE = 2,
+    COL_SURVIVOR = 102,
+    COL_ZOMBIE = 33,
+}
 
-//config radar
-local RADAR_SIZE = 64
-local RADAR_BORDER = 2
-local RADAR_ICON_SIZE = 3
-local RADAR_ICON_SIZE_SPLITSCREEN = 2
-local RADAR_DOT_SIZE = 2
-local RADAR_CLAMP_MARGIN = 5
-local RADAR_COMPASS_DISTANCE = 4
-local RADAR_TEXT_OFFSET = 2
-local RADAR_POSITION_OFFSET = 8
-local RADAR_HEIGHT_SHRINK_SIZE = 2
+local radarPatches = {
+    background = nil,
+    cross = {},
+    outer = {},
+    rings = nil
+}
 
-local radarpatch = nil
-
-local function drawCompassMarkers(v, cx, cy, radius, playerangle, scale)
-	local compassdist = radius - RADAR_COMPASS_DISTANCE*scale
-	local textoffset = RADAR_TEXT_OFFSET*scale
-	local markers = {
-		{ang = 0, text = "N"},
-		{ang = ANGLE_180, text = "S"},
-		{ang = ANGLE_90, text = "E"},
-		{ang = -ANGLE_90, text = "W"}
-	}
-	
-	for i = 1, #markers do
-		local m = markers[i]
-		local angle = playerangle + m.ang
-		local mx = FixedMul(cos(angle), compassdist*FRACUNIT)/FRACUNIT
-		local my = FixedMul(sin(angle), compassdist*FRACUNIT)/FRACUNIT
-		v.drawString(cx+mx-textoffset, cy+my-textoffset, m.text, 
-			V_NOSCALESTART|V_ALLOWLOWERCASE|V_6WIDTHSPACE, "small")
-	end
-end
-local function clampToCircle(x, y, maxDist)
-	local dist = FixedHypot(x*FRACUNIT, y*FRACUNIT)/FRACUNIT
-	if dist > maxDist then
-		local angle = R_PointToAngle2(0, 0, x*FRACUNIT, y*FRACUNIT)
-		x = FixedMul(cos(angle), maxDist*FRACUNIT)/FRACUNIT
-		y = FixedMul(sin(angle), maxDist*FRACUNIT)/FRACUNIT
-		return x, y, true
-	end
-	return x, y, false
+local function loadRotatingFrames(v)
+    for i = 0, 15 do
+        radarPatches.outer[i] = v.cachePatch(string.format("ROUTER%d", i))
+        radarPatches.cross[i] = v.cachePatch(string.format("RCROSS%d", i))
+    end
 end
 
+local function drawRotatingParts(v, cx, cy, scale, playerAngle)
+    local offset = ANGLE_45 / 16
+    local raw = playerAngle / offset
+    local logicalIndex = (raw - (raw % 1)) % 16
+    logicalIndex = (logicalIndex % 16 + 16) % 16
 
+    if radarPatches.cross[logicalIndex] then
+        v.drawScaled(cx * FRACUNIT, cy * FRACUNIT, scale, radarPatches.cross[logicalIndex], V_SNAPTORIGHT|V_SNAPTOTOP)
+    end
 
-local function drawPlayerIcon(v, xpos, ypos, centerx, centery, player, size)
-	if not player or not player.skin then return end
-	
-	local icon = v.getSprite2Patch(player.skin, SPR2_LIFE)
-	local scale = size*FRACUNIT/(icon.width)
-	local colormap = v.getColormap(TC_DEFAULT, player.skincolor)
-	local iconx = FixedInt((xpos+centerx)*FRACUNIT - (icon.width*scale)/2)
-	local icony = FixedInt((ypos+centery)*FRACUNIT - (icon.height*scale)/2)
-	v.drawScaled(iconx*FRACUNIT, icony*FRACUNIT, scale, icon, V_NOSCALESTART, colormap)
+    local outerFrame = logicalIndex % 8
+    if radarPatches.outer[outerFrame] then
+        v.drawScaled(cx * FRACUNIT, cy * FRACUNIT, scale, radarPatches.outer[outerFrame], V_SNAPTORIGHT|V_SNAPTOTOP)
+    end
 end
 
+local function drawSquarePivot(v, x, y, size, color)
+    if not size or size <= 0 then return end
+    local half = size / 2
+    local topRightX = x
+    local topRightY = y
+    v.drawFill(topRightX, topRightY, size, size, color | V_SNAPTORIGHT | V_SNAPTOTOP)
+end
+
+local function clampToCirclePixels(x, y, maxDist)
+    local dist = FixedHypot(x * FRACUNIT, y * FRACUNIT) / FRACUNIT
+    if dist > maxDist then
+        local angle = R_PointToAngle2(0, 0, x * FRACUNIT, y * FRACUNIT)
+        x = FixedMul(cos(angle), maxDist * FRACUNIT) / FRACUNIT
+        y = FixedMul(sin(angle), maxDist * FRACUNIT) / FRACUNIT
+        return x, y, true
+    end
+    return x, y, false
+end
+
+local function drawObjects(v, user, cx, cy, scale)
+    local umo = user.mo
+    if not umo then return end
+
+    local radarsize = RADAR_CONFIG.RADAR_SIZE
+    local radarWidth = FixedMul(radarsize * FRACUNIT, scale) / FRACUNIT
+    local center_pixels = radarWidth / 2
+    local unit = FRACUNIT
+    local worldRadius = 152 * 48
+    local maxDist = center_pixels - RADAR_CONFIG.ICON_OUT_SIZE
+
+    for player in players.iterate do
+        local mo = player.mo
+        if not mo or mo == umo or player.spectator or not mo.health then
+            continue
+        end
+
+        if mo.flags2 & MF2_DONTDRAW then
+            continue
+        end
+
+        local dist = R_PointToDist2(umo.x, umo.y, mo.x, mo.y)
+        if dist > RADAR_CONFIG.RADAR_SIGHT then
+            continue
+        end
+        local angle = umo.angle - R_PointToAngle2(umo.x, umo.y, mo.x, mo.y) + ANGLE_270
+        local x_pixels = P_ReturnThrustX(nil, angle, dist) / unit * center_pixels / worldRadius
+        local y_pixels = P_ReturnThrustY(nil, angle, dist) / unit * center_pixels / worldRadius
+        local clamped
+        x_pixels, y_pixels, clamped = clampToCirclePixels(x_pixels, y_pixels, maxDist)
+        local size = RADAR_CONFIG.ICON_SIZE
+        if clamped then size = RADAR_CONFIG.ICON_OUT_SIZE end
+        local half = size / 2
+        local screenX = cx + x_pixels - half
+        local screenY = cy + y_pixels - half
+
+        local color = RADAR_CONFIG.COL_SURVIVOR
+        if mo.player and mo.player.ctfteam == 1 then
+            color = RADAR_CONFIG.COL_ZOMBIE
+        end
+
+        drawSquarePivot(v, screenX, screenY, size, color)
+    end
+end
+
+local function drawradar(v, user, cam)
+    if not radarPatches.background then
+        radarPatches.background = v.cachePatch("RBACKG")
+        radarPatches.rings = v.cachePatch("RRINGS")
+        loadRotatingFrames(v)
+    end
+    
+    local umo = user.mo
+    local scale = RADAR_CONFIG.RADAR_SCALE
+    local radarsize = RADAR_CONFIG.RADAR_SIZE
+    local radarWidth = FixedMul(radarsize * FRACUNIT, scale) / FRACUNIT
+    local radarHeight = radarWidth
+    local cx = 320 - (radarWidth/2) - RADAR_CONFIG.RADAR_OFFSETX
+    local cy = 0 + (radarHeight/2) + RADAR_CONFIG.RADAR_OFFSETY
+    
+    v.drawScaled(cx * FRACUNIT, cy * FRACUNIT, scale, radarPatches.background, V_SNAPTORIGHT|V_SNAPTOTOP|V_20TRANS)
+    v.drawScaled(cx * FRACUNIT, cy * FRACUNIT, scale, radarPatches.rings, V_SNAPTORIGHT|V_SNAPTOTOP)
+    
+    if cam and cam.angle then
+        drawRotatingParts(v, cx, cy, scale, umo.angle)
+    end
+    drawObjects(v, user, cx, cy, scale)
+end
 
 local function hudstuff(v, user, cam)
-	if not multiplayer or maptol&TOL_NIGHTS 
-		or (gametype == GT_HIDEANDSEEK and user.pflags&PF_TAGIT)
-		or gametype ~= GT_ZESCAPE then 
-		return 
-	end
-	
-	local umo = user.mo
-	if not umo then return end
-	if not radarpatch then
-		radarpatch = v.cachePatch("RADAR")
-	end
-	
-	local xscale = v.dupx()
-	local yscale = v.dupy()
-	local unit = FRACUNIT
-	local radius = 152*48
-	local fullsight = 260*64
-	local radarsize = RADAR_SIZE
-	local hradius = radius
-	
-	if splitscreen then 
-		radarsize = radarsize*2/3 
-	end
-	
-	local center = radarsize/2
-	local xpos = v.width()-radarsize*xscale-RADAR_POSITION_OFFSET*xscale
-	local ypos = RADAR_POSITION_OFFSET*yscale
-	if splitscreen then
-		ypos = ypos/2
-		if user == secondarydisplayplayer then
-			ypos = ypos + v.height()/2
-		end
-	end
-	
-	local cx = xpos + center*xscale
-	local cy = ypos + center*yscale
-	local r = center
-	
-	v.draw(xpos + center, ypos + center, radarpatch, V_NOSCALESTART|V_20TRANS)
-	drawCompassMarkers(v, cx, cy, r*xscale, umo.angle, xscale)
-
-	local maxDist = r*xscale - RADAR_CLAMP_MARGIN*xscale
-	local iconsize = xscale*RADAR_ICON_SIZE/2
-	if splitscreen then 
-		iconsize = iconsize*RADAR_ICON_SIZE_SPLITSCREEN/3 
-	end
-
-
-	if gametype > GT_RACE then
-		searchBlockmap("objects", function(umo, mo)
-			if not mo or not mo.health then return nil end
-			
-			local dist = R_PointToDist2(umo.x, umo.y, mo.x, mo.y)
-			local zdist = abs(mo.z - umo.z)
-			
-			if dist > fullsight*unit then return nil end
-			
-			local color = c_white
-			local size = iconsize
-			local drawicon = false
-			
-			if mo.type == MT_PLAYER then
-				if mo.player.spectator then return nil end
-				
-				drawicon = true
-				
-				if gametype == GT_ZESCAPE then
-					local notmyteam = mo.player.ctfteam == 1
-					local notdrawing = (mo.flags2 & MF2_DONTDRAW)
-					
-					if notdrawing then
-						color = c_black
-					elseif notmyteam and not(leveltime&4) then
-						color = c_yellow
-					elseif mo.player.ctfteam == 1 then
-						color = c_red
-					else
-						color = c_blue
-					end
-				end
-			elseif mo.type >= MT_BOUNCEPICKUP and mo.type <= MT_GRENADEPICKUP then
-				color = c_green
-			elseif mo.type == MT_TOKEN or (mo.type <= MT_EMERHUNT and mo.type >= MT_EMERALD1) then
-				color = not(leveltime&15) and c_orange or c_yellow
-			elseif mo.type == MT_REDFLAG then
-				color = (not(leveltime&15) and not(mo.fuse and not(leveltime&4))) and c_darkred or c_yellow
-			elseif mo.type == MT_BLUEFLAG then
-				color = (not(leveltime&15) and not(mo.fuse and not(leveltime&4))) and c_darkblue or c_yellow
-			else
-				return nil
-			end
-			
-			if zdist > hradius*unit then 
-				size = size*RADAR_HEIGHT_SHRINK_SIZE/3 
-			end
-
-			local angle = umo.angle - R_PointToAngle2(umo.x, umo.y, mo.x, mo.y) + ANGLE_270
-			local x = P_ReturnThrustX(nil, angle, dist)/unit*center/radius
-			local y = P_ReturnThrustY(nil, angle, dist)/unit*center/radius
-			
-			x = x*xscale
-			y = y*yscale
-			
-			local clamped
-			x, y, clamped = clampToCircle(x, y, maxDist)
-			if clamped then size = size/2 end
-			
-			if drawicon and mo.player and mo.player.skin then
-				drawPlayerIcon(v, xpos, ypos, x+center*xscale, y+center*yscale, mo.player, size)
-			else
-				v.drawFill(xpos+x+center*xscale-size/2, ypos+y+center*yscale-size/2, size, size, color|V_NOSCALESTART)
-			end
-			
-			return nil
-		end, umo, umo.x-fullsight*unit, umo.x+fullsight*unit, umo.y-fullsight*unit, umo.y+fullsight*unit)
-	else
-		for player in players.iterate do
-			local mo = player.mo
-			if not mo or mo == umo or player.spectator or not mo.health or (mo.flags2 & MF2_DONTDRAW) then //if not spectator or helth 0 or draw flag?
-				continue
-			end
-			
-			local size = iconsize
-			local dist = R_PointToDist2(umo.x, umo.y, mo.x, mo.y)
-			local angle = umo.angle - R_PointToAngle2(umo.x, umo.y, mo.x, mo.y) + ANGLE_270
-			local x = P_ReturnThrustX(nil, angle, dist)/unit*center/radius
-			local y = P_ReturnThrustY(nil, angle, dist)/unit*center/radius
-			
-			x = x*xscale
-			y = y*yscale
-			
-			local clamped
-			x, y, clamped = clampToCircle(x, y, maxDist)
-			if clamped then size = size/2 end
-			
-			drawPlayerIcon(v, xpos, ypos, x+center*xscale, y+center*yscale, player, size)
-		end
-	end
-	
-	local dotsize = xscale*RADAR_DOT_SIZE
-	v.drawFill(xpos+center*xscale-dotsize/2, ypos+center*yscale-dotsize/2, dotsize, dotsize, c_white|V_NOSCALESTART)
+    if not multiplayer or maptol&TOL_NIGHTS
+    or (gametype == GT_HIDEANDSEEK and user.pflags&PF_TAGIT)
+    or gametype ~= GT_ZESCAPE then
+        return
+    end
+    
+    local umo = user.mo
+    if not umo then return end
+    
+    drawradar(v, user, cam)
 end
 
 hud.add(hudstuff, "game")
