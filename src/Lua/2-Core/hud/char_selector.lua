@@ -50,7 +50,7 @@ function ZE.CloseCharSelector(player)
 		ZE.CharSelector.active[#player].open = false
 		ZE.CharSelector.active[#player] = nil
 		//print("Closed character selector for player "..#player)
-		
+		ZE.schedulePresentation(player)
 		// allow control again
 		player.powers[pw_nocontrol] = 0
 	end
@@ -73,7 +73,6 @@ function ZE.ConfirmCharSelection(player)
 		
 		selector.confirmed = true
 		//print("Selected skin: "..selectedSkin.realname.." for player "..#player)
-		ZE.schedulePresentation(player)
 	end
 end
 
@@ -174,7 +173,7 @@ hud.add(function(v, player)
 	v.fadeScreen(0xFF00, 16)
 	v.drawString(centerX, 30, "SELECT CHARACTER", V_YELLOWMAP, "center")
 	local timeLeft = selector.timer / TICRATE
-	v.drawString(centerX, 45, string.format("Time: %d", timeLeft), V_WHITEMAP, "center")
+	v.drawString(centerX, 45, string.format("Time: %d", timeLeft), nil, "center")
 
 	// draw icons
 	for i = -maxDistance, maxDistance do
@@ -202,7 +201,7 @@ hud.add(function(v, player)
 		if distance == 0 then
 			flags = 0
 		elseif distance == 1 then
-			flags = V_TRANSLUCENT
+			flags = V_10TRANS
 		elseif distance == 2 then
 			flags = V_70TRANS
 		else

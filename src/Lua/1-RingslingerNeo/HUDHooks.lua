@@ -1,12 +1,55 @@
 local RS = RingSlinger
 
+local AMMO_CONFIG = {
+	BAR_HEIGHT = 8,
+	DIAGONAL_OFFSET = 3,
+	
+	AMMO_FILLED_COLOR = 6,
+	AMMO_EMPTY_COLOR = 24,
+	AMMO_COST_COLOR = 84,
+	AMMO_RELOAD_COLOR = 10,
+	AMMO_BG = 24,
+	AMMO_SHADOW = 16,
+}
+
+local function drawDiagonalAmmoBar(v, x, y, width, height, segments, fillSegments, costSegments, curammo, maxammo, isReloading)
+	local diagOffset = AMMO_CONFIG.DIAGONAL_OFFSET
+	local segmentWidth = width / segments
+	
+	for i = 0, height - 1 do
+		local segmentY = y + i
+		local segmentDiagX = (i * diagOffset) / height
+		
+		v.drawFill(x + segmentDiagX + 1, segmentY + 1, width, 1, AMMO_CONFIG.AMMO_SHADOW|V_PERPLAYER|V_SNAPTOBOTTOM|V_50TRANS)
+		v.drawFill(x + segmentDiagX, segmentY, width, 1, AMMO_CONFIG.AMMO_BG|V_PERPLAYER|V_SNAPTOBOTTOM)
+		
+		for seg = 1, segments do
+			local segX = x + segmentDiagX + ((seg - 1) * segmentWidth)
+			local color = AMMO_CONFIG.AMMO_EMPTY_COLOR
+			
+			if isReloading then
+				if seg <= fillSegments then
+					color = AMMO_CONFIG.AMMO_RELOAD_COLOR
+				end
+			elseif seg <= fillSegments then
+				if seg > fillSegments - costSegments then
+					color = AMMO_CONFIG.AMMO_COST_COLOR
+				else
+					color = AMMO_CONFIG.AMMO_FILLED_COLOR
+				end
+			end
+			
+			v.drawFill(segX, segmentY, segmentWidth, 1, color|V_PERPLAYER|V_SNAPTOBOTTOM)
+		end
+	end
+end
+
 local drawammobar = function(v, player, mo, cam)
 	local maxammo = mo.ringslinger.maxammo
+
 	local curammo = mo.ringslinger.ammo
 	local cost = RS.Weapons[mo.ringslinger.loadout[mo.ringslinger.wepslot]].cost
-	if mo.ringslinger.infinity
-		cost = 0
-	elseif (mo.ringslinger.wepslot != 1)
+	if (mo.ringslinger.wepslot != 1)
 		cost = RS.GetOffhandCost($)
 	end
 	local reload = mo.ringslinger.reload
@@ -14,73 +57,37 @@ local drawammobar = function(v, player, mo, cam)
 	local x = 160
 	local y = 187
 	local barx = x - maxammo/2
-	local bary = y + 8
-	local patch1 = v.cachePatch("BARSEG1")
-	local patch2 = v.cachePatch("BARSEG2")
-	local patch3 = v.cachePatch("BARSEG3")
-	local patch4 = v.cachePatch("BARSEG4")
-	local patch5 = v.cachePatch("BARSEG5")
+	local bary = y + 2
 	local pixel = v.cachePatch("BARPIXEL")
 	
-	--Reloading display
+
+	if mo.ringslinger.infinity or maxammo <= 1
+		return
+	end
+	
+
 	if reload
-		if leveltime % 2
-			v.drawString(x, y, "RELOAD", V_HUDTRANSHALF | V_PERPLAYER | V_SNAPTOBOTTOM, "thin-center")
-		end
-		
 		local reloadammo = maxammo * (FRACUNIT - reload) / FRACUNIT
-		local pos = 0
-		while (pos < maxammo)
-			local patch = patch3
-			pos = $ + 1
-			if pos <= reloadammo
-				patch = patch4
-			end
-			v.draw(barx + pos - 1, bary, patch, V_HUDTRANSHALF | V_PERPLAYER | V_SNAPTOBOTTOM)
-		end
+		drawDiagonalAmmoBar(v, barx, bary, maxammo, AMMO_CONFIG.BAR_HEIGHT, maxammo, reloadammo, 0, reloadammo, maxammo, true)
 		
-	--Ammo display
+		if leveltime % 2 == 0
+			v.drawString(x, bary + 1, "RELOAD", V_PERPLAYER | V_SNAPTOBOTTOM, "thin-center")
+		end
 	else
-		--Ammo bar
-		local pos = 0
-		while (pos < maxammo)
-			local patch = patch3
-			pos = $ + 1
-			if (mo.ringslinger.infinity)
-				patch = v.cachePatch("BARSEG"+(5+(pos + leveltime)%4))
-			else
-				if pos <= curammo
-					if pos > curammo - cost
-						if (curammo <= cost)
-							patch = patch5
-						else
-							patch = patch2
-						end
-					else
-						patch = patch1
-					end
-				end
-			end
-			v.draw(barx + pos - 1, bary, patch, V_HUDTRANSHALF | V_PERPLAYER | V_SNAPTOBOTTOM)
-		end
+		drawDiagonalAmmoBar(v, barx, bary, maxammo, AMMO_CONFIG.BAR_HEIGHT, maxammo, curammo, cost, curammo, maxammo, false)
 		
-		--Ammo number
-		local col = 0
+		local textX = x
 		if curammo >= 10
-			x = $ + 1
-		elseif curammo <= cost
-			col = V_REDMAP
-		elseif curammo == maxammo
-			col = V_GREENMAP
+			textX = $ + 1
 		end
-		v.drawString(x, y, tostring(curammo), V_HUDTRANSHALF | V_PERPLAYER | V_SNAPTOBOTTOM | col, "thin-center")
+		local textY = bary + 1
+		v.drawString(textX, textY, tostring(curammo), V_PERPLAYER | V_SNAPTOBOTTOM, "thin-center")
 		
-		--Weapon cooldown bar
 		local delayx = x - weapondelay/2
 		local pos = 0
 		while (pos < weapondelay)
-			pos = $ + 1
-			v.draw(delayx + pos - 1, bary+4, pixel, V_HUDTRANSHALF | V_PERPLAYER | V_SNAPTOBOTTOM)
+			pos = $ + 2
+			v.draw(delayx + pos - 1, bary+AMMO_CONFIG.BAR_HEIGHT+1, pixel, V_HUDTRANSHALF | V_PERPLAYER | V_SNAPTOBOTTOM)
 		end
 	end
 end

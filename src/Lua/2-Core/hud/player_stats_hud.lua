@@ -23,6 +23,12 @@ local HUD_CONFIG = {
     STAMINA_BG = 24,
     STAMINA_SHADOW = 16,
     
+    RAGE_COLOR = 146,
+    RAGE_CANUSE_COLOR = 32,
+    RAGE_CANUSE_FLASH = 120,
+    RAGE_BG = 24,
+    RAGE_SHADOW = 16,
+    
     HEALTH_LOW_THRESHOLD = 25,
     STAMINA_LOW_THRESHOLD = 20,
     
@@ -95,6 +101,7 @@ hud.add(function(v, player, camera)
     if (gametype ~= GT_ZESCAPE) then return end
     if not (player.mo and player.mo.valid) then return end
     if not (player.mo.health and player.mo.health > 0) then return end
+    if player.ctfteam ~= 2 then return end
     if hudtype ~= 2 then return end
     if(player.rings <= 0) then return end
     
@@ -159,60 +166,122 @@ hud.add(function(v, player, camera)
     end
 end, "game")
 
-//stat stamina
+//stat stamina/rage
 hud.add(function(v, player)
     local hudtype = CV.hudtype.value
-    if not (player.ctfteam == 2) then return end
     if (gametype ~= GT_ZESCAPE) then return end
     if not (player.mo and player.mo.valid) then return end
     
     //i dont know why this exists but im keeping it
     if hudtype == 1 then
-        local staminaSec = max(0, player.stamina / TICRATE)
-        if player.stamina < 25 * TICRATE then
-            v.drawString(33, 183, "\x85\S", V_PERPLAYER|V_SNAPTOLEFT|V_SNAPTOBOTTOM)
-            v.drawString(42, 183, staminaSec, V_PERPLAYER|V_SNAPTOLEFT|V_SNAPTOBOTTOM, "left")
-        else
-            v.drawString(33, 183, "\x84\S", V_PERPLAYER|V_SNAPTOLEFT|V_SNAPTOBOTTOM)
-            v.drawString(42, 183, staminaSec, V_PERPLAYER|V_SNAPTOLEFT|V_SNAPTOBOTTOM, "left")
+        if player.ctfteam == 2 then
+            local staminaSec = max(0, player.stamina / TICRATE)
+            if player.stamina < 25 * TICRATE then
+                v.drawString(33, 183, "\x85\S", V_PERPLAYER|V_SNAPTOLEFT|V_SNAPTOBOTTOM)
+                v.drawString(42, 183, staminaSec, V_PERPLAYER|V_SNAPTOLEFT|V_SNAPTOBOTTOM, "left")
+            else
+                v.drawString(33, 183, "\x84\S", V_PERPLAYER|V_SNAPTOLEFT|V_SNAPTOBOTTOM)
+                v.drawString(42, 183, staminaSec, V_PERPLAYER|V_SNAPTOLEFT|V_SNAPTOBOTTOM, "left")
+            end
         end
         return
     end
     
     if hudtype == 2 then
-        local maxStamina = 100 * TICRATE
-        local stamina = max(0, min(player.stamina, maxStamina))
-        local staminaPercent = (stamina * 100) / maxStamina
-        
-        local isLow = isStaminaLow(stamina)
-        local barColor = HUD_CONFIG.STAMINA_COLOR
-        
-        if isLow then
-            barColor = getFlashColor(HUD_CONFIG.STAMINA_COLOR, HUD_CONFIG.STAMINA_LOW_COLOR, HUD_CONFIG.STAMINA_LOW_FLASH)
+        if player.ctfteam == 2 then
+            local maxStamina = 100 * TICRATE
+            local stamina = max(0, min(player.stamina, maxStamina))
+            local staminaPercent = (stamina * 100) / maxStamina
+            
+            local isLow = isStaminaLow(stamina)
+            local barColor = HUD_CONFIG.STAMINA_COLOR
+            
+            if isLow then
+                barColor = getFlashColor(HUD_CONFIG.STAMINA_COLOR, HUD_CONFIG.STAMINA_LOW_COLOR, HUD_CONFIG.STAMINA_LOW_FLASH)
+            end
+            
+            local shakeX = 0
+            local shakeY = 0
+            if isLow then
+                shakeX, shakeY = getShakeOffset()
+            end
+            
+            drawDiagonalBarOptimized(
+                v,
+                HUD_CONFIG.BAR_X,
+                HUD_CONFIG.BAR_Y_STAMINA,
+                HUD_CONFIG.BAR_WIDTH,
+                HUD_CONFIG.BAR_HEIGHT,
+                staminaPercent,
+                barColor,
+                HUD_CONFIG.STAMINA_BG,
+                HUD_CONFIG.STAMINA_SHADOW,
+                shakeX,
+                shakeY
+            )
+            
+            local textX = HUD_CONFIG.BAR_X + HUD_CONFIG.TEXT_OFFSET_X
+            local textY = HUD_CONFIG.BAR_Y_STAMINA + HUD_CONFIG.TEXT_OFFSET_Y
+            v.drawString(textX, textY, staminaPercent .. "%", V_PERPLAYER|V_SNAPTOLEFT|V_SNAPTOBOTTOM, "thin")
         end
-        
-        local shakeX = 0
-        local shakeY = 0
-        if isLow then
-            shakeX, shakeY = getShakeOffset()
-        end
-        
-        drawDiagonalBarOptimized(
-            v,
-            HUD_CONFIG.BAR_X,
-            HUD_CONFIG.BAR_Y_STAMINA,
-            HUD_CONFIG.BAR_WIDTH,
-            HUD_CONFIG.BAR_HEIGHT,
-            staminaPercent,
-            barColor,
-            HUD_CONFIG.STAMINA_BG,
-            HUD_CONFIG.STAMINA_SHADOW,
-            shakeX,
-            shakeY
-        )
-        
-        local textX = HUD_CONFIG.BAR_X + HUD_CONFIG.TEXT_OFFSET_X
-        local textY = HUD_CONFIG.BAR_Y_STAMINA + HUD_CONFIG.TEXT_OFFSET_Y
-        v.drawString(textX, textY, staminaPercent .. "%", V_PERPLAYER|V_SNAPTOLEFT|V_SNAPTOBOTTOM, "thin")
     end
+end, "game")
+
+//stat alpha rage
+hud.add(function(v, player)
+    local hudtype = CV.hudtype.value
+    if (gametype ~= GT_ZESCAPE) then return end
+    if not (player.mo and player.mo.valid) then return end
+    if player.ctfteam ~= 1 or player.ztype ~= "ZM_ALPHA" then return end
+    if hudtype ~= 2 then return end
+    
+    local function ceil(num)
+        return (num - (num % 1)) + ((num % 1 > 0) and 1 or 0)
+    end
+    
+    local ragePercent
+    local text
+    local barColor = HUD_CONFIG.RAGE_COLOR
+    local flash = false
+    
+    local MAX_BOOST_TIME = 3 * TICRATE
+    local MAX_COOLDOWN = 12 * TICRATE
+    
+    if (player.boosttimer or 0) > 0 then
+        local currentTime = player.boosttimer or 0
+        ragePercent = (currentTime * 100) / MAX_BOOST_TIME
+        ragePercent = max(0, min(100, ragePercent))
+        text = ceil(currentTime / TICRATE)
+    elseif (player.boostcount or 0) > 0 then
+        local currentCooldown = player.boostcount or 0
+        ragePercent = 100 - ((currentCooldown * 100) / MAX_COOLDOWN)
+        ragePercent = max(0, min(100, ragePercent))
+        text = ceil(currentCooldown / TICRATE)
+        barColor = HUD_CONFIG.RAGE_CANUSE_COLOR
+    else
+        ragePercent = 100
+        text = "RAGE"
+        flash = true
+    end
+    
+    if flash then
+        barColor = getFlashColor(HUD_CONFIG.RAGE_COLOR, HUD_CONFIG.RAGE_CANUSE_COLOR, HUD_CONFIG.RAGE_CANUSE_FLASH)
+    end
+    
+    drawDiagonalBarOptimized(
+        v,
+        HUD_CONFIG.BAR_X,
+        HUD_CONFIG.BAR_Y_STAMINA,
+        HUD_CONFIG.BAR_WIDTH,
+        HUD_CONFIG.BAR_HEIGHT,
+        ragePercent,
+        barColor,
+        HUD_CONFIG.RAGE_BG,
+        HUD_CONFIG.RAGE_SHADOW,
+        0,
+        0
+    )
+    local textX = HUD_CONFIG.BAR_X + HUD_CONFIG.TEXT_OFFSET_X
+    local textY = HUD_CONFIG.BAR_Y_STAMINA + HUD_CONFIG.TEXT_OFFSET_Y
+    v.drawString(textX, textY, text, V_PERPLAYER|V_SNAPTOLEFT|V_SNAPTOBOTTOM, "thin")
 end, "game")

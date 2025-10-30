@@ -65,19 +65,6 @@ ZE.AddZombie("Tiny", {
 	schm = 10,
 },true)
 
-// Was gonna be luigi zombie.
-ZE.AddZombie("Jisk", {
-	skincolor = SKINCOLOR_FOREST,
-	normalspeed = 65*FRACUNIT,
-	jumpfactor = 18 * FRACUNIT / 19,
-	charability = CA_NONE,
-	charability2 = CA2_NONE,
-	startHealth = 300,
-	maxHealth = 400,
-	schm = 10,
-},true)
-
-
 ZE.CharacterStats = {
 	["defaultconfig"] = {
 		normalspeed = 22 * FRACUNIT,

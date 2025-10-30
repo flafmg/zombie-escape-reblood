@@ -28,29 +28,29 @@ addHook("MapChange", do
 end)
 
 local function Map45_Objection1()
-      chatprint("\x83\Multiplayer Special Stage 1")
-	  chatprint("Survive for\x83 60 \x80seconds")
+      --chatprint("\x83\Multiplayer Special Stage 1")
+	  ZE.notify_all("warm", "Survive for\n{green}60{white} seconds")
 	  map45_time1 = 1
 	  map45_timer1 = 60*TICRATE
 end
 
 local function Map45_Objection2()
-      chatprint("\x81\Multiplayer Special Stage 2")
-	  chatprint("Survive for\x83 60 \x80seconds")
+      --chatprint("\x81\Multiplayer Special Stage 2")
+	  ZE.notify_all("warn", "Survive for\n{green}60{white} seconds")
 	  map45_time2 = 1
 	  map45_timer2 = 60*TICRATE
 end
 
 local function Map45_Objection3()
-      chatprint("\x84\Multiplayer Special Stage 3")
-	  chatprint("Survive for\x85 120 \x80seconds")
+      --chatprint("\x84\Multiplayer Special Stage 3")
+	  ZE.notify_all("warn", "Survive for\n{magenta}120{white} seconds")
 	  map45_time3 = 1
 	  map45_timer3 = 120*TICRATE
 end
 
 local function Map45_Objection4()
-      chatprint("\x82\Multiplayer Special Stage 4")
-	  chatprint("Survive for\x85 120 \x80seconds")
+      --chatprint("\x82\Multiplayer Special Stage 4")
+	  ZE.notify_all("warn", "Survive for\n{magenta}120{white} seconds")
 	  COM_BufInsertText(server, "ze_survtime 120")
 end
 

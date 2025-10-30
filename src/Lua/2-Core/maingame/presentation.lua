@@ -8,6 +8,14 @@ local PRESENT_CONFIG = {
 
 local playerTimers = {}
 local playerseenbasic = {}
+local characterDescriptions = {}
+
+local defaultPresentation = {
+    {type="info", message="Welcome to \nZombie Escape!"},
+    {type="hint", message="{yellow}C1 {white}to run\nconsumes {blue}stamina"},
+    {type="hint", message="{yellow}Fire Normal {white}to reload"},
+    {type="hint", message="{yellow}Fire {white}to attack"}
+}
 
 local function sendNotification(player, type, message)
     ZE.player_notify(player, type, message)
@@ -24,6 +32,7 @@ local function processQueue(player)
         data.timer = PRESENT_CONFIG.NOTIF_DELAY
     end
 end
+
 local function queueNotifications(player, notifs)
     if not playerTimers[player] then
         playerTimers[player] = {queue = {}, timer = 0}
@@ -36,48 +45,26 @@ local function queueNotifications(player, notifs)
     end
 end
 
-addHook("ThinkFrame", function()
-    for player in players.iterate do
-        local data = playerTimers[player]
-        if data and data.timer > 0 then
-            data.timer = $ - 1
-            if data.timer == 0 then
-                processQueue(player)
-            end
-        end
-    end
-end)
-
-
-ZE.presentation = function(player) 
-    if not playerseenbasic[player] then
-        ZE.basicpresentation(player)
-        playerseenbasic[player] = true
-    end
-    ZE.charpresentation(player)
+ZE.addCharacterDescription = function(skinname, notifications)
+    characterDescriptions[skinname] = notifications
 end
+
+ZE.setDefaultPresentation = function(notifications)
+    defaultPresentation = notifications
+end
+
 ZE.basicpresentation = function(player)
-    local notifs = { {type="info", message="Welcome to \nZombie Escape!"}}
-    table.insert(notifs, {type="hint", message="{yellow}C1 {white}to run\nconsumes {blue}stamina"})
-    table.insert(notifs, {type="hint", message="{yellow}Fire Normal {white}to reload"})
-    table.insert(notifs, {type="hint", message="{yellow}Fire {white}to attack"})
-    queueNotifications(player, notifs)
+    queueNotifications(player, defaultPresentation)
 end
+
 ZE.charpresentation = function(player)
     local notifs = {}
+    
     if player.ctfteam == 2 then
         if player.mo and player.mo.valid then
-            if player.mo.skin == "amy" then
-                table.insert(notifs, {type="hint", message="As {rosy}Amy{white}:\n{yellow}Spin {white}to attack or heal"})
-                table.insert(notifs, {type="hint", message="As {rosy}Amy{white}:\n{yellow}TF {white}for heal burst\nCost: "..tostring(ZE.PropCosts["HealBurst"])})
-            elseif player.mo.skin == "tails" then
-                table.insert(notifs, {type="hint", message="As {orange}Tails{white}:\n{yellow}TF {white}to spawn wood fence\nCost: "..tostring(ZE.PropCosts["Wood"])})
-            elseif player.mo.skin == "metalsonic" then
-                table.insert(notifs, {type="hint", message="As {blue}Metal Sonic{white}:\n{yellow}TF {white}to place land mines\nCost: "..tostring(ZE.PropCosts["LandMine"])})
-            elseif player.mo.skin == "fang" then
-                table.insert(notifs, {type="hint", message="As {purple}Fang{white}:\n{yellow}Spin {white}to attack"})
-            elseif player.mo.skin == "scarf" then
-                table.insert(notifs, {type="hint", message="As Scraf{white}:\n{yellow}Spin {white}for melee\n{yellow}Hold Spin {white}for fireball"}) //who the fuck is scraf?
+            local skinname = player.mo.skin
+            if characterDescriptions[skinname] then
+                notifs = characterDescriptions[skinname]
             end
         end
     elseif player.ctfteam == 1 then
@@ -91,7 +78,16 @@ ZE.charpresentation = function(player)
             table.insert(notifs, {type="hint", message="As Zombie\n{red}seek fresh meat"})
         end
     end
+    
     queueNotifications(player, notifs)
+end
+
+ZE.presentation = function(player) 
+    if not playerseenbasic[player] then
+        ZE.basicpresentation(player)
+        playerseenbasic[player] = true
+    end
+    ZE.charpresentation(player)
 end
 
 ZE.schedulePresentation = function(player)
@@ -119,3 +115,28 @@ addHook("ThinkFrame", function()
         end
     end
 end)
+
+ZE.addCharacterDescription("amy", {
+    {type="hint", message="As {rosy}Amy{white}:\n{yellow}Spin {white}to attack or heal"},
+    {type="hint", message="As {rosy}Amy{white}:\n{yellow}TF {white}for heal burst\nCost: "..tostring(ZE.PropCosts["HealBurst"])}
+})
+
+ZE.addCharacterDescription("tails", {
+    {type="hint", message="As {orange}Tails{white}:\n{yellow}TF {white}to spawn wood fence\nCost: "..tostring(ZE.PropCosts["Wood"])}
+})
+
+ZE.addCharacterDescription("metalsonic", {
+    {type="hint", message="As {blue}Metal Sonic{white}:\n{yellow}TF {white}to place land mines\nCost: "..tostring(ZE.PropCosts["LandMine"])}
+})
+
+ZE.addCharacterDescription("fang", {
+    {type="hint", message="As {purple}Fang{white}:\n{yellow}Spin {white}to attack"}
+})
+
+ZE.addCharacterDescription("scarf", {
+    {type="hint", message="As Scraf{white}:\n{yellow}Spin {white}for melee\n{yellow}Hold Spin {white}for fireball"}
+})
+
+ZE.addCharacterDescription("sonic", {
+    {type="hint", message="As {blue}sonic{white}:\n {yellow}jump {white}twice for thok"}
+})

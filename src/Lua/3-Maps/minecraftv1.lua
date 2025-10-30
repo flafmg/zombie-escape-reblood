@@ -85,7 +85,7 @@ hud.add(function(v,p,c)
 end,"game")
 
 local function Map47_Part1()
-      chatprint("\x8D\Wooden Platform \x80will leave in\x85 30 \x80seconds")
+      ZE.notify_all("defend", "Wooden Platform leaves in\n{magenta}30{white} seconds")
 	  S_StartSound(player, sfx_radio)
 	  map47_act1 = 1
 	  map47_timer1 = 30*TICRATE
@@ -94,7 +94,7 @@ local function Map47_Part1()
 end
 
 local function Map47_Part2()
-      chatprint("\x8F\Obsidian Wall \x80will break in\x85 60 \x80seconds")
+      ZE.notify_all("defend", "Obsidian Wall breaks in\n{magenta}60{white} seconds")
 	  COM_BufInsertText(player, "tunes mc2")
 	  S_StartSound(player, sfx_radio)
 	  map47_act2 = 1
@@ -104,7 +104,8 @@ local function Map47_Part2()
 end
 
 local function Map47_Part3()
-      chatprint("Iron Door will open in\x82 20 \x80seconds")
+      --chatprint("Iron Door will open in\x82 20 \x80seconds")
+      ZE.notify_all("defend", "Iron Door opens in\n{yellow}20{white} seconds")
 	  S_StartSound(player, sfx_radio)
 	  map47_act3 = 1
 	  map47_timer3 = 20*TICRATE
@@ -113,7 +114,7 @@ local function Map47_Part3()
 end
 
 local function Map47_Part4()
-      chatprint("\x86\Stone Platform \x80will leave in\x85 60 \x80seconds")
+      ZE.notify_all("defend", "Stone Platform leaves in\n{magenta}60{white} seconds")
 	  COM_BufInsertText(player, "tunes mc3")
 	  S_StartSound(player, sfx_radio)
 	  map47_act4 = 1
@@ -153,10 +154,10 @@ addHook("ThinkFrame", do
 		   map47_timer1 = $-1
 		end
 	  if map47_timer1 == 15*TICRATE then
-	     chatprint("\x8D\Wooden Platform \x80will leave in\x82 15 \x80seconds")
+	     ZE.notify_all("defend", "Wooden Platform leaves in\n{yellow}15{white} seconds")
 		 S_StartSound(player, sfx_radio)
 		elseif map47_timer1 == 5*TICRATE then
-		 chatprint("\x8D\Wooden Platform \x80will leave in\x83 5 \x80seconds")
+		 ZE.notify_all("defend", "Wooden Platform leaves in\n{green}5{white} seconds")
 		 S_StartSound(player, sfx_radio)
 	    end
        if map47_timer1 == 0 and gamemap == 7 then
@@ -173,10 +174,10 @@ addHook("ThinkFrame", do
 		   map47_timer2 = $-1
 	end
 	  if map47_timer2 == 15*TICRATE then
-	     chatprint("\x8F\Obsidian Wall \x80will break in\x82 15 \x80seconds")
+	     ZE.notify_all("defend", "Obsidian Wall breaks in\n{yellow}15{white} seconds")
 		 S_StartSound(player, sfx_radio)
 		elseif map47_timer2 == 5*TICRATE then
-		 chatprint("\x8F\Obsidian Wall \x80will break in\x83 5 \x80seconds")
+		 ZE.notify_all("defend", "Obsidian Wall breaks in\n{green}5{white} seconds")
 		 S_StartSound(player, sfx_radio)
 	    end
        if map47_timer2 == 0 and gamemap == 7 then
@@ -195,10 +196,12 @@ addHook("ThinkFrame", do
 	   map47_timer3 = $-1
 	end
 	if map47_timer3 == 10*TICRATE then
-		chatprint("Iron Door will open in\x82 10 \x80seconds")
+		--chatprint("Iron Door will open in\x82 10 \x80seconds")
+		ZE.notify_all("defend", "Iron Door opens in\n{yellow}10{white} seconds")
 		S_StartSound(player, sfx_radio)
 	elseif map47_timer3 == 5*TICRATE then
-		chatprint("Iron Door will open in\x83 5 \x80seconds")
+		--chatprint("Iron Door will open in\x83 5 \x80seconds")
+		ZE.notify_all("defend", "Iron Door opens in\n{green}5{white} seconds")
 		S_StartSound(player, sfx_radio)
 	end
 	if map47_timer3 == 0 and gamemap == 7 then
@@ -217,10 +220,10 @@ addHook("ThinkFrame", do
 		   map47_timer4 = $-1
 	end
 	  if map47_timer4 == 15*TICRATE then
-	     chatprint("\x86\Stone Platform \x80will leave in\x82 15 \x80seconds")
+	     ZE.notify_all("defend", "Stone Platform leaves in\n{yellow}15{white} seconds")
 		 S_StartSound(player, sfx_radio)
 		elseif map47_timer4 == 5*TICRATE then
-		 chatprint("\x86\Stone Platform \x80will leave in\x83 5 \x80seconds")
+		 ZE.notify_all("defend", "Stone Platform leaves in\n{green}5{white} seconds")
 		 S_StartSound(player, sfx_radio)
 	    end
        if map47_timer4 == 0 and gamemap == 7 then

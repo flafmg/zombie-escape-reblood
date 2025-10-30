@@ -8,7 +8,6 @@ for _, filename in ipairs{
 	"2-Core/init/int_freeslot.lua",
 	"2-Core/init/int_global.lua",
 	"2-Core/init/int_ZE_RSNEO.lua",
-	"2-Core/hud/player_notification.lua",
 	"2-Core/maingame/presentation.lua",
 	
 	--cmds and etc
@@ -19,7 +18,6 @@ for _, filename in ipairs{
 	
 	--main ze code	
 	"2-Core/maingame/main.lua",
-	
 	"2-Core/healthsystem/rhealth.lua",
 	"2-Core/healthsystem/rhealth_dmg.lua",
 	"2-Core/healthsystem/rhealth_extra.lua",
@@ -79,7 +77,7 @@ for _, filename in ipairs{
 	"1-RingslingerNeo/HurtMsgHooks.lua",
 	"1-RingslingerNeo/NewRingExplode.lua",
 	"1-RingslingerNeo/RocketForce.lua",
-	
+
 	--ze server base
 	"4-CoreServer/2-ServerUtil/discord.lua",
 	"4-CoreServer/2-ServerUtil/VL_IntermissionLock-v1.lua",
@@ -104,6 +102,9 @@ for _, filename in ipairs{
 	"2-Core/hud/game_status_hud.lua",
 	"2-Core/hooks/hook_extrachars.lua",
 	"2-Core/hooks/hook_collidehooks.lua",
+
+	"2-Core/hud/player_notification.lua",
+
 } do
     dofile(filename)
 end

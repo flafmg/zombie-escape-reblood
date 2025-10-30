@@ -129,21 +129,22 @@ local function map48_floweytalk2()
 end
 
 local function map48_door1()
-      chatprint("\x89\Door \x80will open in\x85 60 \x80seconds")
+      --chatprint("\x89\Door \x80will open in\x85 60 \x80seconds")
+      ZE.notify_all("defend", "Door opens in\n{magenta}60{white} seconds")
 	  S_StartSound(player, sfx_utdgr)
 	  map48_door1 = 1
 	  map48_timer1 = 60*TICRATE
 end
 
 local function map48_Prebattle1()
-      chatprint("\x8B\Zombies \x80will appear in\x82 20 \x80seconds")
+      ZE.notify_all("warn", "Zombies appear in\n{yellow}20{white} seconds")
 	  S_StartSound(player, sfx_utdgr)
 	  map48_Prebattle1 = 1
 	  map48_timer2 = 20*TICRATE
 end
 
 local function map48_Startbattle1()
-      chatprint("Survive for\x85 60 \x80seconds")
+      ZE.notify_all("warn", "Survive for\n{magenta}60{white} seconds")
 	  S_StartSound(player, sfx_utdgr)
 	  map48_battle1 = 1
 	  map48_timer3 = 60*TICRATE
@@ -228,13 +229,16 @@ addHook("ThinkFrame", do
 		   map48_timer1 = $-1
 	end
 	  if map48_timer1 == 30*TICRATE then
-	     chatprint("\x89\Door \x80will open in\x82 30 \x80seconds")
+	     --chatprint("\x89\Door \x80will open in\x82 30 \x80seconds")
+	     ZE.notify_all("defend", "Door opens in\n{yellow}30{white} seconds")
 		 S_StartSound(player, sfx_radio)
 		elseif map48_timer1 == 15*TICRATE then
-		 chatprint("\x89\Door \x80will open in\x85 15 \x80seconds")
+		 --chatprint("\x89\Door \x80will open in\x85 15 \x80seconds")
+		 ZE.notify_all("defend", "Door opens in\n{magenta}15{white} seconds")
 		 S_StartSound(player, sfx_radio)
 		elseif map48_timer1 == 5*TICRATE then
-		 chatprint("\x89\Door \x80will open in\x83 5 \x80seconds")
+		 --chatprint("\x89\Door \x80will open in\x83 5 \x80seconds")
+		 ZE.notify_all("defend", "Door opens in\n{green}5{white} seconds")
 		 S_StartSound(player, sfx_radio) 
 	    end
        if map48_timer1 == 0 and gamemap == 8 then
@@ -264,13 +268,13 @@ addHook("ThinkFrame", do
 		   map48_timer3 = $-1
 	end
 	  if map48_timer3 == 30*TICRATE then
-	     chatprint("\x82\ 30 \x80seconds remaining")
+	     ZE.notify_all("warn", "30 seconds remaining")
 		 S_StartSound(player, sfx_radio)
 		elseif map48_timer3 == 15*TICRATE then
-		 chatprint("\x82\ 15 \x80seconds remaining")
+		 ZE.notify_all("warn", "15 seconds remaining")
 		 S_StartSound(player, sfx_radio)
 		elseif map48_timer3 == 5*TICRATE then
-		 chatprint("\x83\ 5 \x80seconds remaining")
+		 ZE.notify_all("warn", "5 seconds remaining")
 		 S_StartSound(player, sfx_radio) 
 	    end
        if map48_timer3 == 1*TICRATE and gamemap == 8 then

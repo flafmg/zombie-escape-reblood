@@ -40,31 +40,34 @@ addHook("MapChange", do
 end)
 
 local function Map42_Objection1()
-      chatprint("\x85\Elevator \x80opens in\x82 20 \x80seconds")
+      ZE.notify_all("defend", "Elevator opens in\n{yellow}20{white} seconds")
 	  map42_door1 = 1
 	  map42_door1Timer = 20*TICRATE
 end
 
 local function Map42_Objection2()
-      chatprint("\x85\Elevator \x80opens in\x82 30 \x80seconds")
+      ZE.notify_all("defend", "Elevator opens in\n{yellow}30{white} seconds")
 	  map42_door2 = 1
 	  map42_door2Timer = 30*TICRATE
 end
 
 local function Map42_Objection3()
-      chatprint("\x85\Doors \x80will open in\x82 25 \x80seconds")
+      --chatprint("\x85\Doors \x80will open in\x82 25 \x80seconds")
+      ZE.notify_all("defend", "Doors opens in\n{red}25{white} seconds")
 	  map42_door3 = 1
 	  map42_door3Timer = 25*TICRATE
 end
 
 local function Map42_Objection4()
-      chatprint("\x85\Gates \x80will open in\x83 15 \x80seconds")
+      --chatprint("\x85\Gates \x80will open in\x83 15 \x80seconds")
+      ZE.notify_all("defend", "Gates opens in\n{green}15{white} seconds")
 	  map42_door4 = 1
 	  map42_door4Timer = 15*TICRATE
 end
 
 local function Map42_Objection5()
-      chatprint("\x85\The Final Gate \x80will open in\x85 60 \x80seconds")
+      --chatprint("\x85\The Final Gate \x80will open in\x85 60 \x80seconds")
+      ZE.notify_all("defend", "The Final Gate opens in\n{magenta}60{white} seconds")
 	  map42_door5 = 1
 	  map42_door5Timer = 60*TICRATE
 end
@@ -107,7 +110,7 @@ addHook("ThinkFrame", do
 	end
        if map42_door1Timer == 0 then
 	      P_LinedefExecute(16)
-		  chatprint("\x83\Elevator \x80opened")
+		  ZE.notify_all("defend", "Elevator opened")
 	end
 end)
 
@@ -117,7 +120,7 @@ addHook("ThinkFrame", do
 	end
        if map42_door2Timer == 0 then
 	      P_LinedefExecute(23)
-		  chatprint("\x83\Elevator \x80opened")
+		  ZE.notify_all("defend", "Elevator opened")
 	end
 end)
 
@@ -128,7 +131,7 @@ addHook("ThinkFrame", do
        if map42_door3Timer == 0 and gamemap == 5 then
 	      P_LinedefExecute(36)
 		  Map42_Tele1()
-		  chatprint("\x83\Doors \x80opened")
+		  ZE.notify_all("defend", "Doors opened")
 	end
 end)
 
@@ -139,7 +142,7 @@ addHook("ThinkFrame", do
        if map42_door4Timer == 0 and gamemap == 5 then
 	      P_LinedefExecute(41)
 		  Map42_Tele3()
-		  chatprint("\x83\Gates \x80opened")
+		  ZE.notify_all("defend", "Gates opened")
 	end
 end)
 
@@ -149,7 +152,7 @@ addHook("ThinkFrame", do
 	end
        if map42_door5Timer == 0 then
 	      P_LinedefExecute(30)
-		  chatprint("\x83\Final Gates \x80opened")
+		  ZE.notify_all("defend", "Final Gates opened")
 	end
 end)
 

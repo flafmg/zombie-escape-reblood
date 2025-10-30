@@ -175,6 +175,12 @@ ZE.player_notify = function(player, type, message)
     addNotification(player, type, message)
 end
 
+ZE.notify_all = function(type, message)
+    for player in players.iterate do
+        ZE.player_notify(player, type, message)
+    end
+end
+
 hud.add(function(v, player)
     if gametype ~= GT_ZESCAPE then return end
     local notifs = activeNotifications[player]

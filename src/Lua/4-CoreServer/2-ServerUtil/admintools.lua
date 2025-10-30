@@ -355,3 +355,7 @@ COM_AddCommand('here', function(player, target)
         S_StartSound(player.mo, sfx_mixup, player)
     end
 end, 1)
+
+COM_AddCommand("forcealphaattack", function(player)
+    ZE.Start_alpha_attack()
+end, 1)
