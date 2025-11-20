@@ -29,7 +29,7 @@ end)
 
 local function Map45_Objection1()
       --chatprint("\x83\Multiplayer Special Stage 1")
-	  ZE.notify_all("warm", "Survive for\n{green}60{white} seconds")
+	  ZE.notify_all("warn", "Survive for\n{green}60{white} seconds")
 	  map45_time1 = 1
 	  map45_timer1 = 60*TICRATE
 end

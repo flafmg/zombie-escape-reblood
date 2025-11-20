@@ -17,6 +17,7 @@ ZE.SpawnPlayer = function(player)
 		if servercheck and player.jointime > minjointime then
 			--CONS_Printf(server, "Forced team change")
 			COM_BufInsertText(server, "serverchangeteam \$#player\ red")
+			ZE.presentation(player)
 		else
 			COM_BufInsertText(player, "changeteam red")
 		end
@@ -25,6 +26,7 @@ ZE.SpawnPlayer = function(player)
 		if servercheck and player.jointime > minjointime then
 			--CONS_Printf(server, "Forced team change")
 			COM_BufInsertText(server, "serverchangeteam \$#player\ red")
+			ZE.presentation(player)
 		else
 			COM_BufInsertText(player, "changeteam red")
 		end

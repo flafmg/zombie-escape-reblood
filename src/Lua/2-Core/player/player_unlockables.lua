@@ -4,6 +4,7 @@ local CV = ZE.Console
 ZE.Unlockables = {}
 
 ZE.addUnlockableCharacter = function(char, gamesRequired)
+    print("adding unlockable char: "..char.." with "..gamesRequired.." rounds required")
     ZE.Unlockables[char] = {
         char = char,
         games = gamesRequired,

@@ -7,7 +7,7 @@ addHook("PlayerThink", function(player)
 		and (player.playerstate != PST_DEAD)
 		and (player.mo.state != S_PLAY_DEAD)
 			ZE.RevengerAbility(player)
-			ZE.Revenger(player)
+			ZE.CheckCharacterAccess()
 			ZE.MilnePlayerThink(player)
 		end
 	end

@@ -127,6 +127,10 @@ ZE.TeamSwitch = function(player, fromspectators, team)
 			chatprintf(player, "\x85\<Zombie>\x80\ You will be enslaved by the zombies if you continue.")
 		end
 	end
+	
+	if team == 1 then
+		ZE.charpresentation(player)
+	end
 end
 
 ZE.InfectRandomPlayer = function()

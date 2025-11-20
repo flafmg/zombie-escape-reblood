@@ -202,3 +202,7 @@ ZE.CharacterStats = {
     }
 }
 
+ZE.addUnlockableCharacter("bob", 5)
+ZE.addUnlockableCharacter("w", 15)
+ZE.addUnlockableCharacter("revenger", 30)
+

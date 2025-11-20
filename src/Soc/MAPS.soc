@@ -152,23 +152,10 @@ Subtitle = Ladders and traps
 Act = 0
 Music = SCP87B
 TypeOfLevel = ZESCAPE
-NextLevel = R1
-NoZone = True
-SelectHeading = Zombie Escape Maps
-Lua.SurviveTime = 10
-
-Level 10
-Levelname = Roblox Obby
-Subtitle = Easy parkour
-Act = 0
-SkyNum = 52
-Music = RBXO
-TypeOfLevel = ZESCAPE
 NextLevel = R2
 NoZone = True
 SelectHeading = Zombie Escape Maps
-Lua.BounceOff = true
-Lua.PlayerCountName = ROBLOXIANS
+Lua.SurviveTime = 10
 
 Level 11
 Levelname = Empty Lab

@@ -46,7 +46,11 @@ end
 
 local drawammobar = function(v, player, mo, cam)
 	local maxammo = mo.ringslinger.maxammo
-
+	
+	if mo.ringslinger.infinity or maxammo <= 1
+		return
+	end
+	
 	local curammo = mo.ringslinger.ammo
 	local cost = RS.Weapons[mo.ringslinger.loadout[mo.ringslinger.wepslot]].cost
 	if (mo.ringslinger.wepslot != 1)
@@ -60,12 +64,6 @@ local drawammobar = function(v, player, mo, cam)
 	local bary = y + 2
 	local pixel = v.cachePatch("BARPIXEL")
 	
-
-	if mo.ringslinger.infinity or maxammo <= 1
-		return
-	end
-	
-
 	if reload
 		local reloadammo = maxammo * (FRACUNIT - reload) / FRACUNIT
 		drawDiagonalAmmoBar(v, barx, bary, maxammo, AMMO_CONFIG.BAR_HEIGHT, maxammo, reloadammo, 0, reloadammo, maxammo, true)
@@ -73,6 +71,7 @@ local drawammobar = function(v, player, mo, cam)
 		if leveltime % 2 == 0
 			v.drawString(x, bary + 1, "RELOAD", V_PERPLAYER | V_SNAPTOBOTTOM, "thin-center")
 		end
+		
 	else
 		drawDiagonalAmmoBar(v, barx, bary, maxammo, AMMO_CONFIG.BAR_HEIGHT, maxammo, curammo, cost, curammo, maxammo, false)
 		
@@ -86,8 +85,8 @@ local drawammobar = function(v, player, mo, cam)
 		local delayx = x - weapondelay/2
 		local pos = 0
 		while (pos < weapondelay)
-			pos = $ + 2
-			v.draw(delayx + pos - 1, bary+AMMO_CONFIG.BAR_HEIGHT+1, pixel, V_HUDTRANSHALF | V_PERPLAYER | V_SNAPTOBOTTOM)
+			pos = $ + 1
+			v.draw(delayx + pos - 1, bary+AMMO_CONFIG.BAR_HEIGHT+2, pixel, V_HUDTRANSHALF | V_PERPLAYER | V_SNAPTOBOTTOM)
 		end
 	end
 end

@@ -8,7 +8,7 @@ for _, filename in ipairs{
 	"2-Core/init/int_freeslot.lua",
 	"2-Core/init/int_global.lua",
 	"2-Core/init/int_ZE_RSNEO.lua",
-	"2-Core/maingame/presentation.lua",
+	"2-Core/player/player_unlockables.lua",
 	
 	--cmds and etc
 	"2-Core/console/con_timer.lua",
@@ -42,13 +42,13 @@ for _, filename in ipairs{
 	"2-Core/player/player_handlezombies.lua",
 	"2-Core/player/player_leave.lua",
 	"2-Core/player/fangcork.lua",
-	
 	"2-Core/player/propspawn.lua",
 	"2-Core/player/ability_milne.lua",
 	"2-Core/player/revenger.lua",
-	"2-Core/player/unlock.lua",
 	"2-Core/player/inputfeatures.lua",
 	"2-Core/player/healthorb.lua",
+
+	"2-Core/maingame/presentation.lua",
 
 	--mapvote stuff
 	"4-CoreServer/1-MapVote/1_Rawset.lua",

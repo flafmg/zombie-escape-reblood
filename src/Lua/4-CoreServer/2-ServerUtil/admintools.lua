@@ -181,6 +181,41 @@ COM_AddCommand("takerevenger", function(player, pname)
 	end
 end, 1)
 
+COM_AddCommand("unlockchar", function(player, pname, char)
+	if not pname or not char then
+		CONS_Printf(player, "unlockchar <player> <character>: Unlock a character for a player")
+		return
+	end
+	local player2 = GetPlayer(player, pname)
+	if player2 then
+		local unlock = ZE.Unlockables[char]
+		if unlock then
+			player2[unlock.flag] = 1
+			CONS_Printf(player, "Unlocked " .. char .. " for " .. player2.name)
+			chatprint(player2.name .. " has been granted " .. char .. " by an admin!")
+		else
+			CONS_Printf(player, "Character " .. char .. " is not unlockable")
+		end
+	end
+end, 1)
+COM_AddCommand("lockchar", function(player, pname, char)
+	if not pname or not char then
+		CONS_Printf(player, "lockchar <player> <character>: Lock a character for a player")
+		return
+	end
+	local player2 = GetPlayer(player, pname)
+	if player2 then
+		local unlock = ZE.Unlockables[char]
+		if unlock then
+			player2[unlock.flag] = 0
+			CONS_Printf(player, "Locked " .. char .. " for " .. player2.name)
+			chatprint(player2.name .. " has had " .. char .. " locked by an admin!")
+		else
+			CONS_Printf(player, "Character " .. char .. " is not unlockable")
+		end
+	end
+end, 1)
+
 COM_AddCommand("expandscale", function(player, pname)
 	if not pname then
 		return

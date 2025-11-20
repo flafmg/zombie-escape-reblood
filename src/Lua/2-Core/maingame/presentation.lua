@@ -2,7 +2,7 @@ local ZE = RV_ZESCAPE
 
 local PRESENT_CONFIG = {
     DELAY_AFTER_CHAR_SELECT = 2 * TICRATE,
-    NOTIF_DELAY = 14 * TICRATE, 
+    NOTIF_DELAY = 6 * TICRATE, 
     PRESENT_DELAY = 2 * TICRATE,  
 }
 
@@ -68,8 +68,6 @@ ZE.charpresentation = function(player)
             end
         end
     elseif player.ctfteam == 1 then
-        table.insert(notifs, {type="hint", message="{yellow}Fire {white}to attack"})
-        
         if player.ztype == "ZM_ALPHA" then
             table.insert(notifs, {type="hint", message="As Alpha Zombie:\n{yellow}C1 {white}to rage\nCooldown shown"})
         elseif player.ztype then
@@ -138,5 +136,5 @@ ZE.addCharacterDescription("scarf", {
 })
 
 ZE.addCharacterDescription("sonic", {
-    {type="hint", message="As {blue}sonic{white}:\n {yellow}jump {white}twice for thok"}
+    {type="hint", message="As {blue}sonic{white}:\n{yellow}jump {white}twice for thok"}
 })

@@ -26,14 +26,14 @@ ZE.map43netvars = function(net)
 end
 
 local function Map43_Door1()
-      chatprint("\x85\ 120 \x80seconds before gates open")
+      ZE.notify_all("defend", "Gates open in\n{magenta}120{white} seconds")
 	  S_StartSound(player, sfx_radio)
 	  map43_act1door = 1
 	  map43_act1doorTimer = 120*TICRATE
 end
 
 local function Map43_Door2()
-      chatprint("\x85\ 60 \x80seconds before gates open")
+      ZE.notify_all("defend", "Gates open in\n{magenta}60{white} seconds")
 	  S_StartSound(player, sfx_radio)
 	  map43_act2door = 1
 	  map43_act2doorTimer = 60*TICRATE
@@ -44,10 +44,10 @@ addHook("ThinkFrame", do
 		   map43_act1doorTimer = $-1
 	end
 	  if map43_act1doorTimer == 30*TICRATE then
-	     chatprint("\x82\ 30 \x80seconds before gates open")
+	     ZE.notify_all("defend", "Gates open in\n{yellow}30{white} seconds")
 		 S_StartSound(player, sfx_radio)
 		elseif map43_act1doorTimer == 5*TICRATE then
-		 chatprint("\x83\ 5 \x80seconds before gates open")
+		 ZE.notify_all("defend", "Gates open in\n{green}5{white} seconds")
 		 S_StartSound(player, sfx_radio)
 	    end
        if map43_act1doorTimer == 0 and gamemap == 4 then
@@ -60,10 +60,10 @@ addHook("ThinkFrame", do
 		   map43_act2doorTimer = $-1
 	end
 	  if map43_act2doorTimer == 15*TICRATE then
-	     chatprint("\x82\ 15 \x80seconds before gates open")
+	     ZE.notify_all("defend", "Gates open in\n{yellow}15{white} seconds")
 		 S_StartSound(player, sfx_radio)
 		elseif map43_act2doorTimer == 5*TICRATE then
-		 chatprint("\x83\ 5 \x80seconds before gates open")
+		 ZE.notify_all("defend", "Gates open in\n{green}5{white} seconds")
 		 S_StartSound(player, sfx_radio)
 	    end
        if map43_act2doorTimer == 0 and gamemap == 4 then

@@ -197,10 +197,10 @@ COM_AddCommand("setstuff", function(player, pname, arg1, arg2)
 	local player2 = FindPlayer(player, pname)
 	if player2 then
 		if arg1 then
-			player2.rvgrpass = arg1 --loading3
+			player2.rvgrpass = arg1
 		end
 		if arg2 then
-			player2.gamesPlayed = arg2 --loading3
+			player2.gamesPlayed = arg2
 		end
 	end
 end, 1)
@@ -282,6 +282,19 @@ COM_AddCommand("loadnamestuff", function(player, node, password)
 					ps_gamesPlayed = gamesPlayed:read("*a") or $ --loading4
 					gamesPlayed:close()
 				end
+				
+				if ZE and ZE.Unlockables then
+					for char, unlock in pairs(ZE.Unlockables) do
+						local unlockfile = io.openlocal(folderstuff..playerstuff.stuffname.."/"..unlock.flag..".dat", "r")
+						if unlockfile
+							local val = unlockfile:read("*a")
+							if val then
+								playerstuff[unlock.flag] = tonumber(val) or 0
+							end
+							unlockfile:close()
+						end
+					end
+				end
 				if cv_setadmin.value == 1
 					-- Promote the player, if the player was admin on the server.
 					local adminstuff = io.openlocal(folderstuff..playerstuff.stuffname.."/admin.dat", "r")
@@ -359,6 +372,14 @@ COM_AddCommand("savenamestuff", function(player, node, password)
 					local gamesplayedstuff = io.openlocal(folderstuff..playerstuff.stuffname.."/gamesPlayed.dat", "w")
 					gamesplayedstuff:write(playerstuff.gamesPlayed)
 					gamesplayedstuff:close()
+					
+					if ZE and ZE.Unlockables then
+						for char, unlock in pairs(ZE.Unlockables) do
+							local unlockfile = io.openlocal(folderstuff..playerstuff.stuffname.."/"..unlock.flag..".dat", "w")
+							unlockfile:write(playerstuff[unlock.flag] or 0)
+							unlockfile:close()
+						end
+					end
 				end
 				-- Save admin
 				if cv_setadmin.value == 1

@@ -24,4 +24,12 @@ end)
 
 addHook("PlayerQuit", function(player)
 	ZE.RemoveZtypesOnLeave(player)
+	
+	if ZE.Unlockables then
+		for char, unlock in pairs(ZE.Unlockables) do
+			player[unlock.flag] = nil
+		end
+	end
+	player.gamesPlayed = nil
+	player.rvgrpass = nil
 end)

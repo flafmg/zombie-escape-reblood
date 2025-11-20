@@ -43,6 +43,9 @@ addHook("PlayerSpawn", function(player)
 		player.submittedztypes = $ or {}
 		--player.rvgrpass
 		--player.gamesPlayed
+		if CV.gamestarted and player.ctfteam == 2 then
+			ZE.schedulePresentation(player)
+		end
 		end
 	end
 end)

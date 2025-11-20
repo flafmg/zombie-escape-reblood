@@ -45,7 +45,7 @@ local NOTIF_TYPES = {
         scale = (5 * FRACUNIT) / 4,
         bg_color = 71,
         shadow_color = 28,
-        text_padding = 16
+        text_padding = 18
     },
     defend = {
         patch = "DEFEND",

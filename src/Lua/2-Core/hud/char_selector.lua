@@ -7,14 +7,12 @@ ZE.CharSelector = {
 	initialized = false
 }
 
-local function InitAvailableSkins()
-	if ZE.CharSelector.initialized then return end
-
+local function InitAvailableSkins(player)
 	ZE.CharSelector.availableSkins = {}
 	
 	for i = 0, #skins do
 		local skin = skins[i]
-		if skin and skin.valid and skin.name ~= "dzombie" then
+		if skin and skin.valid and skin.name ~= "dzombie" and ZE.isCharacterUnlocked(player, skin.name) then
 			table.insert(ZE.CharSelector.availableSkins, {
 				name = skin.name,
 				realname = skin.realname or skin.name,
@@ -25,13 +23,12 @@ local function InitAvailableSkins()
 		end
 	end
 	
-	ZE.CharSelector.initialized = true
-	//print("Initialized "..#ZE.CharSelector.availableSkins.." skins")
+	//print("Initialized "..#ZE.CharSelector.availableSkins.." skins for player "..player.name)
 end
 function ZE.OpenCharSelector(player, duration)
 	if not player or not player.valid then return end
 	
-	InitAvailableSkins()
+	InitAvailableSkins(player)
 	
 	ZE.CharSelector.active[#player] = {
 		open = true,
@@ -250,9 +247,7 @@ end)
 
 addHook("MapLoad", function()
 	if gametype == GT_ZESCAPE then
-		ZE.CharSelector.initialized = false
 		ZE.CharSelector.active = {}
-		InitAvailableSkins()
 
 		for player in players.iterate do
 			ZE.OpenCharSelector(player, CV.waittime)
