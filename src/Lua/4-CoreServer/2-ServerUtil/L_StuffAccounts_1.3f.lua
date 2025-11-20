@@ -109,16 +109,13 @@ local function ExitIfNoPlayerOnTheSP()
 		end
 	end
 end
---player.rvgrpass
 --player.gamesPlayed
 local OtherStuff = {}
 local function SaveOtherStuff(stuff, player) --loading1
-	stuff.rvgrpass = player.rvgrpass 
 	stuff.gamesPlayed = player.gamesPlayed 
 end
 
 local function LoadOtherStuff(stuff, player) --loading2
-	player.rvgrpass = stuff.rvgrpass 
 	player.gamesPlayed = stuff.gamesPlayed 
 end
 
@@ -184,7 +181,7 @@ COM_AddCommand("setusername", function(player, pname, username, usererror, passw
 	end
 end, 1)
 
-COM_AddCommand("setstuff", function(player, pname, arg1, arg2)
+COM_AddCommand("setstuff", function(player, pname, arg1)
 	if player != server
 		if server.isdedicated != true
 			CONS_Printf(player, "Remote admin can't use this command.")
@@ -197,11 +194,24 @@ COM_AddCommand("setstuff", function(player, pname, arg1, arg2)
 	local player2 = FindPlayer(player, pname)
 	if player2 then
 		if arg1 then
-			player2.rvgrpass = arg1
+			player2.gamesPlayed = arg1
 		end
-		if arg2 then
-			player2.gamesPlayed = arg2
+	end
+end, 1)
+
+COM_AddCommand("setunlock", function(player, pname, flag, value)
+	if player != server
+		if server.isdedicated != true
+			CONS_Printf(player, "Remote admin can't use this command.")
+			return
 		end
+	end
+	if pname == nil or flag == nil or value == nil
+		return
+	end
+	local player2 = FindPlayer(player, pname)
+	if player2 then
+		player2[flag] = tonumber(value) or 0
 	end
 end, 1)
 
@@ -244,7 +254,6 @@ COM_AddCommand("loadnamestuff", function(player, node, password)
 		if playerstuff != nil
 			-- locals variable.
 			local ps_password = "none"
-			local ps_revenger = playerstuff.revenger
 			local ps_gamesPlayed = playerstuff.gamesPlayed
 			local ps_admin = "false"
 			local check_user = IsUsernameLogged(playerstuff.username)
@@ -270,28 +279,26 @@ COM_AddCommand("loadnamestuff", function(player, node, password)
 			end
 			
 			if playerstuff.stuffname -- This load stuff for the player.
-				--Load revenger.
 				if gametype ~= GT_ZESCAPE then return end
-				local revengerstuff = io.openlocal(folderstuff..playerstuff.stuffname.."/revenger.dat", "r")
-				if revengerstuff
-					ps_revenger = revengerstuff:read("*a") or $ --loading4
-					revengerstuff:close()
-				end
+				
 				local gamesPlayed = io.openlocal(folderstuff..playerstuff.stuffname.."/gamesPlayed.dat", "r")
 				if gamesPlayed
 					ps_gamesPlayed = gamesPlayed:read("*a") or $ --loading4
 					gamesPlayed:close()
 				end
 				
+				-- Load unlocked characters from file
 				if ZE and ZE.Unlockables then
-					for char, unlock in pairs(ZE.Unlockables) do
-						local unlockfile = io.openlocal(folderstuff..playerstuff.stuffname.."/"..unlock.flag..".dat", "r")
-						if unlockfile
-							local val = unlockfile:read("*a")
-							if val then
-								playerstuff[unlock.flag] = tonumber(val) or 0
+					local unlockedfile = io.openlocal(folderstuff..playerstuff.stuffname.."/unlocked.dat", "r")
+					if unlockedfile then
+						local unlockedstr = unlockedfile:read("*a") or ""
+						unlockedfile:close()
+						
+						-- parse
+						for char in string.gmatch(unlockedstr, "%S+") do
+							if ZE.Unlockables[char] then
+								playerstuff[ZE.Unlockables[char].flag] = 1
 							end
-							unlockfile:close()
 						end
 					end
 				end
@@ -307,7 +314,15 @@ COM_AddCommand("loadnamestuff", function(player, node, password)
 					end
 				end
 				-- Set stuff
-				COM_BufInsertText(server, "setstuff "..node.." "..ps_revenger.." "..ps_gamesPlayed)
+				COM_BufInsertText(server, "setstuff "..node.." "..ps_gamesPlayed)
+				
+				if ZE and ZE.Unlockables then
+					for char, unlock in pairs(ZE.Unlockables) do
+						if playerstuff[unlock.flag] then
+							COM_BufInsertText(server, "setunlock "..node.." "..unlock.flag.." "..playerstuff[unlock.flag])
+						end
+					end
+				end
 			end
 		end
 	end
@@ -324,10 +339,8 @@ COM_AddCommand("savenamestuff", function(player, node, password)
 			-- Do a log when the player saves things.
 			if cv_dologstuff.value == 1
 				local log_stuff = io.openlocal(folderstuff.."/log_stuff.txt", "a+")
-				log_stuff:write("Player name: "..playerstuff.rvgrpass.."\n") --loading5
-				log_stuff:close()
-				local log_stuff = io.openlocal(folderstuff.."/log_stuff.txt", "a+")
-				log_stuff:write("Player name: "..playerstuff.gamesPlayed.."\n") --loading5
+				log_stuff:write("Player name: "..playerstuff.name.."\n")
+				log_stuff:write("Games played: "..playerstuff.gamesPlayed.."\n")
 				log_stuff:close()
 			end
 			if password
@@ -365,20 +378,22 @@ COM_AddCommand("savenamestuff", function(player, node, password)
 			-- This save stuff of the player.
 			if playerstuff.stuffname
 				if gametype == GT_ZESCAPE
-					local revengerstuff = io.openlocal(folderstuff..playerstuff.stuffname.."/revenger.dat", "w")
-					revengerstuff:write(playerstuff.rvgrpass)
-					revengerstuff:close()
-					
 					local gamesplayedstuff = io.openlocal(folderstuff..playerstuff.stuffname.."/gamesPlayed.dat", "w")
-					gamesplayedstuff:write(playerstuff.gamesPlayed)
+					gamesplayedstuff:write(tostring(playerstuff.gamesPlayed or 0))
 					gamesplayedstuff:close()
 					
+					-- Save unlocked characters to single file
 					if ZE and ZE.Unlockables then
+						local unlockedChars = {}
 						for char, unlock in pairs(ZE.Unlockables) do
-							local unlockfile = io.openlocal(folderstuff..playerstuff.stuffname.."/"..unlock.flag..".dat", "w")
-							unlockfile:write(playerstuff[unlock.flag] or 0)
-							unlockfile:close()
+							if playerstuff[unlock.flag] and playerstuff[unlock.flag] == 1 then
+								table.insert(unlockedChars, char)
+							end
 						end
+						
+						local unlockedfile = io.openlocal(folderstuff..playerstuff.stuffname.."/unlocked.dat", "w")
+						unlockedfile:write(table.concat(unlockedChars, " "))
+						unlockedfile:close()
 					end
 				end
 				-- Save admin
